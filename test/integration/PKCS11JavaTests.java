@@ -27,11 +27,11 @@ import java.io.InputStream;
 public class PKCS11JavaTests {
 
     static final String PIN = "myuserpin";
-    static final String KEY_ALIAS = "rsa1";
-	
+    static final String KEY_ALIAS_RSA = "rsa1";
+
     static KeyStore KEY_STORE;
     static Provider PROV;
-    
+
     @BeforeClass
     public static void beforeAllTestMethods() throws Exception {
         /*
@@ -57,22 +57,22 @@ public class PKCS11JavaTests {
 
         /* add the provider */
         Security.addProvider(PROV);
-        
+
         /* Generate a keystore from the provider */
         KEY_STORE = KeyStore.getInstance("PKCS11-TPM2");
         KeyStore.PasswordProtection pp = new KeyStore.PasswordProtection(PIN.toCharArray());
         KEY_STORE.load(null, pp.getPassword());
     }
-    
+
     @Test
     public void test_rsa_crypto() throws Exception {
 
         /* Get the key/cert pair */
-        Key rsaKey = KEY_STORE.getKey(KEY_ALIAS, null);
+        Key rsaKey = KEY_STORE.getKey(KEY_ALIAS_RSA, null);
         Assert.assertEquals("RSA", rsaKey.getAlgorithm());
 
-        X509Certificate certificate = (X509Certificate) KEY_STORE.getCertificate(KEY_ALIAS);
-        
+        X509Certificate certificate = (X509Certificate) KEY_STORE.getCertificate(KEY_ALIAS_RSA);
+
         /* get the public key from the cert */
         Key rsaPublicKey = certificate.getPublicKey();
 
@@ -80,21 +80,21 @@ public class PKCS11JavaTests {
         Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding", PROV);
 
         String plaintext = "mysecretdata";
-        
+
         byte[] plainData = plaintext.getBytes("UTF-8");
-       
-    	cipher.init(Cipher.ENCRYPT_MODE, rsaPublicKey);
-    	byte[] encryptedData = cipher.doFinal(plainData);
+
+    	  cipher.init(Cipher.ENCRYPT_MODE, rsaPublicKey);
+    	  byte[] encryptedData = cipher.doFinal(plainData);
 
         cipher.init(Cipher.DECRYPT_MODE, rsaKey);
         int output = cipher.getOutputSize(encryptedData.length);
         byte[] decryptedData = cipher.doFinal(encryptedData);
 
         String decrypted = new String(decryptedData, output - plainData.length, plainData.length);
-        
+
         Assert.assertEquals(plaintext, decrypted);
-    }	
-	
+    }
+
 	public static void main(String [] args) {
 		int rc = 1;
 		Result result = JUnitCore.runClasses(PKCS11JavaTests.class);
@@ -103,7 +103,7 @@ public class PKCS11JavaTests {
 	    	System.out.println("Success");
 	    } else {
 	    	System.out.println("Failed");
-	    }	
+	    }
 
 		for (Failure failure : result.getFailures()) {
 	        System.out.println(failure.toString());
